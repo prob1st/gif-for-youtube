@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "GIF for YouTube — GIF Studio",
   "short_name": "GIF for YouTube",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "YouTube yorumlarına GIF ekle: 335 hazır GIF, Giphy arama, canlı stüdyo ve yayınlanınca kaybolmayan kalıcı GIF kodu (:gfy:).",
   "minimum_chrome_version": "111",
   "icons": {

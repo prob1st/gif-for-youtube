@@ -296,6 +296,13 @@
     async positionPanel() {
       const pos = await Store.get('panelPos', null);
       const p = this.refs.panel;
+      // Dar ekranda panel alt-sheet olarak tam genişlikte açılır; konum hatırlanmaz.
+      if (window.innerWidth <= 520) {
+        p.style.left = '';
+        p.style.top = '';
+        p.style.right = '';
+        return;
+      }
       if (pos && pos.left) {
         p.style.left = pos.left;
         p.style.top = pos.top;
@@ -325,7 +332,8 @@
     close() {
       this.refs.panel.hidden = true;
       this.open_ = false;
-      this.clearSelection();
+      // Seçim korunur: paneli kapatıp açtığında GIF ve stüdyo ayarları yerinde kalır.
+      // (Stüdyodaki ✕ düğmesi seçimi temizler.)
     }
 
     toggle() {
@@ -1217,6 +1225,11 @@
       g.cGFY.send({ type: 'gfy:stats', kind: 'insert' });
       if (res.mode === 'textarea-text') this.toast(this.lang === 'tr' ? 'Link yorum alanına yazıldı' : 'Link written into the box');
       else this.toast(this.t('inserted'));
+      // Mobilde panel ekranı kapladığı için ekleme sonrası kapanır:
+      // böylece yorum kutusu ve "Yorum yap" görünür olur.
+      if (window.innerWidth <= 520) {
+        window.setTimeout(() => this.close(), 650);
+      }
     }
 
     removeInserted() {

@@ -1,4 +1,4 @@
-# GIF for YouTube — GIF Studio  ·  v1.1.0
+# GIF for YouTube — GIF Studio  ·  v1.1.1
 
 YouTube yorumlarına **GIF ekleyen** Chrome uzantısı (Manifest V3, Türkçe/İngilizce).
 335 GIF'lik doğrulanmış hazır tepki paketi, Giphy arama, link çözümleme, yerel GIF desteği,
@@ -8,6 +8,8 @@ YouTube yorumlarına **GIF ekleyen** Chrome uzantısı (Manifest V3, Türkçe/İ
 > **Bu depo hazır bir uzantıdır.** `gif-for-youtube` klasörünü Chrome'a yükle, çalışır.
 
 ![GIF Studio paneli](shots/store-1280x800.png)
+
+<p align="center"><img src="shots/52-mobile-panel.png" width="320" alt="Mobil alt-sheet panel"></p>
 
 ---
 
@@ -161,7 +163,7 @@ gif-for-youtube/
 
 ---
 
-## 6. Geliştirme ve test
+## 7. Geliştirme ve test
 
 ```bash
 # 36 birim testi (tarayıcı gerekmez)
@@ -180,13 +182,14 @@ cd .. && zip -r gif-for-youtube-v1.0.0.zip gif-for-youtube -x "*.DS_Store"
 | Demo sayfası (Playwright, Chromium) | ✅ panel, 6 sekme, ekleme, canlı stil, arama, `Esc` — konsol hatası yok |
 | **Gerçek uzantı yüklemesi (Chromium + `--load-extension`)** | ✅ service worker kaydı, içerik betiği enjeksiyonu, 120 kartın Giphy'den yüklenmesi (8/8 örnek), panelden arama (24 sonuç), GIF'in `contenteditable` içine eklenmesi (260×260, `contenteditable="false"`, GIF etiketi), `chrome.storage` kalıcılığı (1 geçmiş, 1 sayaç), canlı boyut 260→480px, `Esc` ile kapanma |
 | Ayarlar + popup sayfaları | ✅ 29 ayar satırı, canlı önizleme (105→213px), switch'ler; popup durum göstergesi |
-| **Yayın testi (v1.1.0):** YouTube taklidi sayfada GIF ekle → "Yorum yap" | ✅ gönderilen metin `:gfy:ID: https://giphy.com/…`; `<img>` yok, sızan "GIF" yazısı yok; yorum akışında kod tekrar **GIF olarak** yüklendi (naturalWidth>0) |
+| **Mobil emülasyon (iPhone 13, gerçek uzantı):** panel alt-sheet olarak sığıyor (390×571), ekleme sonrası otomatik kapanıyor, seçim korunuyor, yayınlanan metin `:gfy:…: link` | ✅ |
+| **Yayın testi (v1.1.0+):** YouTube taklidi sayfada GIF ekle → "Yorum yap" | ✅ gönderilen metin `:gfy:ID: https://giphy.com/…`; `<img>` yok, sızan "GIF" yazısı yok; yorum akışında kod tekrar **GIF olarak** yüklendi (naturalWidth>0) |
 
 Test betikleri: `../tools/test_demo.py`, `../tools/e2e_extension.py`, `../tools/e2e_publish.py`, `../tools/test_pages.py`.
 
 ---
 
-## 7. Sorun giderme
+## 8. Sorun giderme
 
 | Belirti | Çözüm |
 |---|---|
@@ -199,7 +202,7 @@ Test betikleri: `../tools/test_demo.py`, `../tools/e2e_extension.py`, `../tools/
 
 ---
 
-## 8. Gizlilik
+## 9. Gizlilik
 
 - Hiçbir analitik, izleme veya uzak sunucu yok. Arama istekleri doğrudan Giphy'ye gider.
 - Ayarlar, favoriler, geçmiş yalnızca `chrome.storage.local` içinde tutulur.
@@ -207,7 +210,7 @@ Test betikleri: `../tools/test_demo.py`, `../tools/e2e_extension.py`, `../tools/
 - Giphy API anahtarı (girersen) yalnızca cihazında saklanır.
 - Ayrıntılar: `PRIVACY.md`.
 
-## 9. Lisans ve içerik
+## 10. Lisans ve içerik
 
 Kod: MIT. GIF içeriği Giphy üzerinden sunulur ve [Giphy kullanım koşullarına](https://giphy.com/terms) tabidir.
 Yerleşik paket yalnızca herkese açık Giphy GIF'lerinin kimliklerini içerir; medya Giphy CDN'inden yüklenir.

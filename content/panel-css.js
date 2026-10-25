@@ -291,6 +291,28 @@
 .gfy-fab:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .gfy-fab[hidden]{display:none}
 
+/* ---------- mobil / dar ekran ---------- */
+@media (max-width: 520px){
+  .gfy-panel{
+    left:0!important;right:0!important;top:auto!important;bottom:0!important;
+    width:100%!important;max-width:100%!important;
+    height:min(86vh, 720px);
+    border-radius:18px 18px 0 0;
+    border-left:0;border-right:0;border-bottom:0;
+    box-shadow:0 -18px 50px rgba(0,0,0,.6);
+    animation:gfy-sheet-in .22s cubic-bezier(.2,.8,.3,1);
+  }
+  @keyframes gfy-sheet-in{from{transform:translateY(24px)}to{transform:none}}
+  .gfy-head{cursor:default;padding-top:10px}
+  .gfy-head::before{
+    content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);
+    width:38px;height:4px;border-radius:99px;background:var(--line);
+  }
+  .gfy-fab{right:14px!important;bottom:74px!important;width:52px;height:52px;border-radius:16px}
+  .gfy-studio-body{max-height:190px}
+  .gfy-grid{columns:2}
+  .gfy-body{padding-bottom:env(safe-area-inset-bottom, 0)}
+}
 .gfy-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .gfy-spin{animation:gfy-rot .9s linear infinite}
 @keyframes gfy-rot{to{transform:rotate(360deg)}}
