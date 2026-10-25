@@ -1,0 +1,102 @@
+{
+  "manifest_version": 3,
+  "name": "GIF for YouTube — GIF Studio",
+  "short_name": "GIF for YouTube",
+  "version": "1.1.0",
+  "description": "YouTube yorumlarına GIF ekle: 335 hazır GIF, Giphy arama, canlı stüdyo ve yayınlanınca kaybolmayan kalıcı GIF kodu (:gfy:).",
+  "minimum_chrome_version": "111",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "GIF for YouTube",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab",
+    "clipboardWrite",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "https://*.youtube.com/*",
+    "https://*.youtu.be/*",
+    "https://media.giphy.com/*",
+    "https://media0.giphy.com/*",
+    "https://media1.giphy.com/*",
+    "https://media2.giphy.com/*",
+    "https://media3.giphy.com/*",
+    "https://media4.giphy.com/*",
+    "https://media5.giphy.com/*",
+    "https://i.giphy.com/*",
+    "https://giphy.com/*",
+    "https://*.tenor.com/*",
+    "https://tenor.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://youtube.com/*",
+        "https://m.youtube.com/*"
+      ],
+      "js": [
+        "lib/core.js",
+        "lib/i18n.js",
+        "lib/pack.js",
+        "content/panel-css.js",
+        "content/insert.js",
+        "content/ui.js",
+        "content/main.js",
+        "content/render-codes.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*.png",
+        "data/pack.json"
+      ],
+      "matches": [
+        "https://*.youtube.com/*",
+        "https://youtube.com/*"
+      ]
+    }
+  ],
+  "commands": {
+    "open-gif-panel": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G",
+        "mac": "Command+Shift+G"
+      },
+      "description": "GIF panelini aç / kapat"
+    },
+    "quick-gif": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Son kullanılan GIF'i imlece ekle"
+    }
+  }
+}

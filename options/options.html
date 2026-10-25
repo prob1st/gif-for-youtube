@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GIF for YouTube — Ayarlar</title>
+<style>
+  :root{
+    --accent:#ff2d55;--bg:#0f0f12;--bg2:#16161b;--bg3:#1e1e25;--line:#2b2b34;
+    --fg:#f3f3f6;--mut:#9a9aa8;--ok:#22c55e;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg)}
+  body{
+    font-family:"YouTube Sans",Roboto,"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
+    padding-bottom:80px;
+  }
+  a{color:var(--accent)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  header.top{
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(255,45,85,.14),transparent);
+    padding:26px 0 22px;margin-bottom:26px;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent),#ff7a3d);color:#fff;font-weight:800;font-size:13px;
+    box-shadow:0 10px 26px -10px var(--accent);
+  }
+  h1{font-size:19px;margin:0;letter-spacing:-.3px}
+  .sub{color:var(--mut);font-size:12.5px;margin-top:2px}
+  .pill{
+    margin-left:auto;font-size:11px;font-weight:700;color:var(--mut);
+    border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--bg2);
+  }
+  .banner{
+    display:none;gap:12px;align-items:flex-start;border:1px solid rgba(34,197,94,.42);
+    background:rgba(34,197,94,.08);border-radius:var(--radius);
+    padding:14px 16px;margin-bottom:22px;
+  }
+  .banner.show{display:flex}
+  .banner h3{margin:0 0 3px;font-size:14px}
+  .banner p{margin:0;color:var(--mut);font-size:12.5px}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+  @media (max-width:900px){.layout{grid-template-columns:1fr}.sticky{position:static!important}}
+  .card{
+    background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 20px;margin-bottom:16px;
+  }
+  .card > h2{
+    font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);
+    margin:0 0 14px;font-weight:750;
+  }
+  .row{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:9px 0;border-top:1px solid rgba(255,255,255,.05);
+  }
+  .row:first-of-type{border-top:0}
+  .row .label{font-size:13px}
+  .row .help{display:block;font-size:11.5px;color:var(--mut);margin-top:2px;max-width:420px}
+  select,input[type="text"],input[type="password"]{
+    background:var(--bg3);color:var(--fg);border:1px solid var(--line);border-radius:9px;
+    padding:8px 10px;font:inherit;font-size:12.5px;min-width:170px;max-width:260px;
+  }
+  select:focus,input:focus{outline:2px solid var(--accent);outline-offset:1px}
+  input[type="range"]{width:190px;accent-color:var(--accent)}
+  .val{font-variant-numeric:tabular-nums;color:var(--mut);font-size:11.5px;min-width:42px;text-align:right}
+  .switch{
+    position:relative;width:40px;height:22px;border-radius:999px;background:var(--bg3);
+    border:1px solid var(--line);cursor:pointer;transition:background .16s;flex:0 0 auto;padding:0;
+  }
+  .switch::after{
+    content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+    background:#fff;transition:transform .18s cubic-bezier(.2,.8,.3,1);
+  }
+  .switch[aria-checked="true"]{background:var(--accent);border-color:transparent}
+  .switch[aria-checked="true"]::after{transform:translateX(18px)}
+  .switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn{
+    background:var(--bg3);border:1px solid var(--line);color:var(--fg);border-radius:9px;
+    padding:8px 14px;font:650 12.5px/1.4 inherit;cursor:pointer;transition:all .14s;
+  }
+  .btn:hover{background:#2a2a33}
+  .btn.primary{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 8px 20px -10px var(--accent)}
+  .btn.danger{border-color:rgba(239,68,68,.45);color:#ff8b8b}
+  .btn.danger:hover{background:color-mix(in srgb,#ef4444 16%,var(--bg3))}
+  .swatches{display:flex;gap:8px;flex-wrap:wrap}
+  .swatch{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+  .swatch[aria-pressed="true"]{border-color:var(--fg);transform:scale(1.08)}
+  .sticky{position:sticky;top:20px}
+  .preview-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .preview-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:11px 14px;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;
+  }
+  .preview-head span:last-child{font-weight:600;color:var(--mut);font-size:11px}
+  .preview-area{
+    padding:16px;min-height:230px;display:flex;align-items:center;justify-content:center;
+    background:
+      linear-gradient(45deg,#14141a 25%,transparent 25%) 0 0/16px 16px,
+      linear-gradient(-45deg,#14141a 25%,transparent 25%) 8px 8px/16px 16px,
+      linear-gradient(45deg,transparent 75%,#14141a 75%) 8px 8px/16px 16px,
+      linear-gradient(-45deg,transparent 75%,#14141a 75%) 0 0/16px 16px,
+      #101015;
+    overflow:hidden;
+  }
+  .comment-fake{width:100%;max-width:270px;background:#0c0c10;border:1px solid var(--line);border-radius:12px;padding:12px}
+  .comment-fake .who{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#a855f7)}
+  .who-name{font-size:11px;color:var(--mut)}
+  .preview-foot{padding:11px 14px;border-top:1px solid var(--line);font-size:11px;color:var(--mut);display:flex;gap:6px;flex-wrap:wrap}
+  kbd{
+    font:650 11px/1.6 ui-monospace,Menlo,Consolas,monospace;background:var(--bg3);
+    border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;
+  }
+  code{background:var(--bg3);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px}
+  ul.tips{margin:6px 0 0;padding-left:20px;color:var(--mut);font-size:12.5px;line-height:1.7}
+  ul.tips b{color:var(--fg)}
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);
+    background:#0c0c10;border:1px solid var(--line);color:#fff;border-radius:999px;
+    padding:10px 18px;font-size:12.5px;font-weight:650;opacity:0;pointer-events:none;
+    transition:all .22s cubic-bezier(.2,.8,.3,1);box-shadow:0 16px 40px rgba(0,0,0,.5);z-index:50;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  footer.credit{
+    margin-top:26px;padding-top:16px;border-top:1px solid var(--line);
+    color:var(--mut);font-size:11.5px;line-height:1.7;
+  }
+  .seg{display:flex;gap:3px;background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .seg button{
+    border:0;background:transparent;color:var(--mut);border-radius:7px;padding:5px 11px;
+    font:650 12px/1.4 inherit;cursor:pointer;
+  }
+  .seg button[aria-pressed="true"]{background:var(--bg);color:var(--fg);box-shadow:0 1px 5px rgba(0,0,0,.35)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap brand">
+    <div class="logo">GIF</div>
+    <div>
+      <h1>GIF for YouTube — Ayarlar</h1>
+      <div class="sub">GIF stüdyosu, arama ve veri tercihleri · v1.0.0</div>
+    </div>
+    <div class="pill" id="packBadge">335 GIF</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="banner" id="welcome">
+    <div style="font-size:20px">✨</div>
+    <div>
+      <h3>Kurulum tamam — hazırsın!</h3>
+      <p>YouTube'da bir yorum kutusuna tıkla, <b>Ctrl+Shift+G</b> ile paneli aç. Sağ alttaki <b>GIF</b> düğmesini de kullanabilirsin. Aşağıdaki ayarlarla stüdyonun varsayılan stilini belirle.</p>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <section class="card">
+        <h2>GIF Stüdyosu — varsayılan stil</h2>
+        <div id="studioControls"></div>
+      </section>
+
+      <section class="card">
+        <h2>Ekleme davranışı</h2>
+        <div id="insertControls"></div>
+      </section>
+
+      <section class="card">
+        <h2>Arama ve sağlayıcı</h2>
+        <div id="searchControls"></div>
+      </section>
+
+      <section class="card">
+        <h2>Görünüm ve dil</h2>
+        <div id="appearanceControls"></div>
+      </section>
+
+      <section class="card" id="help">
+        <h2>Yardım ve sorun giderme</h2>
+        <ul class="tips">
+          <li><b>GIF eklenmiyor:</b> Önce yorum kutusuna tıkla (imleç görünsün), sonra GIF'i ekle. YouTube yorum alanını yeniden oluşturursa paneli kapatıp aç.</li>
+          <li><b>Kısayollar:</b> <kbd>Ctrl+Shift+G</kbd> panel · <kbd>Ctrl+Shift+Y</kbd> son GIF · <kbd>/</kbd> arama · <kbd>Esc</kbd> kapat. Chrome'da <code>chrome://extensions/shortcuts</code> ile değiştirilebilir.</li>
+          <li><b>Arama boş dönüyor:</b> Giphy'nin ücretsiz API anahtarını <a href="https://developers.giphy.com/dashboard/" target="_blank" rel="noopener">buradan</a> alıp aşağıya ekle. Anahtar olmadan arama, hazır paket + web modunda çalışır.</li>
+          <li><b>GIF gönderdikten sonra kayboluyor:</b> “GIF + link” modunu kullan — GIF ile birlikte kaynak linki de eklenir.</li>
+          <li><b>Yerel dosyalar:</b> Tarayıcıda kalır (base64), hiçbir sunucuya gönderilmez. Depolama sınırı için 20 tepki sınırı vardır.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Veriler</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="exportBtn">Ayarları dışa aktar</button>
+          <button class="btn" id="importBtn">İçe aktar</button>
+          <input type="file" id="importFile" accept="application/json" hidden>
+          <button class="btn" id="clearRecent">Geçmişi temizle</button>
+          <button class="btn danger" id="resetAll">Tüm verileri sıfırla</button>
+        </div>
+        <div class="sub" id="statsLine" style="margin-top:12px">—</div>
+      </section>
+
+      <footer class="credit">
+        <b>GIF for YouTube</b> · Manifest V3 · Türkçe/İngilizce.<br>
+        GIF içeriği Giphy üzerinden sunulur ve Giphy'nin kullanım koşullarına tabidir. Yerleşik paket, herkese açık Giphy GIF'lerinden oluşur.
+        YouTube ile resmî bir bağlantısı yoktur.
+      </footer>
+    </div>
+
+    <aside class="sticky">
+      <div class="preview-card">
+        <div class="preview-head"><span>Canlı önizleme</span><span id="previewInfo">—</span></div>
+        <div class="preview-area">
+          <div class="comment-fake">
+            <div class="who"><div class="avatar"></div><div class="who-name">Bir yorum gibi görünür</div></div>
+            <div id="pillHost" style="line-height:0;min-height:60px"></div>
+          </div>
+        </div>
+        <div class="preview-foot" id="previewFoot"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="toast" id="toast">Kaydedildi</div>
+<script src="../lib/core.js"></script>
+<script src="../lib/pack.js"></script>
+<script src="options.js"></script>
+</body>
+</html>

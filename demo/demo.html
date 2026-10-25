@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GIF for YouTube — canlı demo</title>
+<style>
+  :root{--bg:#0f0f0f;--bg2:#181818;--bg3:#212121;--line:#303030;--fg:#f1f1f1;--mut:#aaa;--accent:#ff2d55}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg)}
+  body{font-family:"YouTube Sans",Roboto,"Segoe UI",system-ui,Arial,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;padding-bottom:40px}
+  .demo-bar{
+    display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:12px;
+    background:linear-gradient(90deg,#ff2d55,#ff7a3d);color:#fff;font-weight:650;
+  }
+  .demo-bar b{font-weight:800}
+  .demo-bar span{opacity:.9;font-weight:500}
+  .topbar{
+    display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:rgba(15,15,15,.96);backdrop-filter:blur(8px);z-index:10;
+  }
+  .yt-logo{display:flex;align-items:center;gap:6px;font-weight:800;letter-spacing:-.4px;font-size:16px}
+  .yt-play{width:28px;height:20px;border-radius:5px;background:#ff0000;display:grid;place-items:center}
+  .yt-play::after{content:"";border-left:7px solid #fff;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;margin-left:2px}
+  .searchbar{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:#121212;border:1px solid var(--line);border-radius:999px;padding:7px 14px;color:var(--mut);font-size:12.5px}
+  .avatar-top{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#a855f7);margin-left:auto}
+  .page{max-width:1000px;margin:0 auto;padding:18px;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:22px}
+  @media (max-width:860px){.page{grid-template-columns:1fr}.rail{display:none}}
+  .player{aspect-ratio:16/9;border-radius:12px;background:radial-gradient(circle at 50% 45%,#242424,#0b0b0b);display:grid;place-items:center;border:1px solid var(--line)}
+  .player .bigplay{width:62px;height:44px;border-radius:12px;background:#ff0000;display:grid;place-items:center;box-shadow:0 10px 30px -8px #ff0000}
+  .player .bigplay::after{content:"";border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
+  h1.vtitle{font-size:17px;margin:12px 0 4px;font-weight:750;letter-spacing:-.2px}
+  .vmeta{color:var(--mut);font-size:12px;margin-bottom:14px}
+  .chan{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .chan .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ff2d55,#ff7a3d)}
+  .chan .nm{font-weight:650;font-size:13px}
+  .chan .subs{color:var(--mut);font-size:11px}
+  .subbtn{margin-left:auto;background:#f1f1f1;color:#0f0f0f;border:0;border-radius:999px;padding:8px 14px;font-weight:700;font-size:12px}
+  .comments{margin-top:16px}
+  .comments h2{font-size:15px;margin:0 0 14px;font-weight:700}
+  ytd-commentbox.comment-box{display:flex;gap:12px;margin-bottom:22px}
+  .comment-box .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#22d3ee,#3b82f6);flex:0 0 auto}
+  .box-wrap{flex:1;min-width:0}
+  #contenteditable-root{
+    min-height:44px;padding:9px 4px;font-size:13.5px;line-height:1.6;outline:none;
+    border-bottom:1px solid var(--line);
+  }
+  #contenteditable-root:empty::before{content:attr(data-placeholder);color:#717171}
+  #contenteditable-root:focus{border-bottom-color:#f1f1f1}
+  .box-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+  .ghost-btn{background:transparent;border:0;color:var(--fg);border-radius:999px;padding:8px 14px;font-weight:650;font-size:12.5px;cursor:pointer}
+  .ghost-btn:hover{background:var(--bg3)}
+  .ghost-btn.primary{background:#065fd4;color:#fff}
+  .ghost-btn.primary:hover{background:#0a72f5}
+  .c-item{display:flex;gap:12px;margin-bottom:18px}
+  .c-item .av{width:32px;height:32px;border-radius:50%;flex:0 0 auto}
+  .c-item .who{font-size:12px;font-weight:650;margin-bottom:3px}
+  .c-item .who span{color:var(--mut);font-weight:400;margin-left:6px}
+  .c-item .txt{font-size:13px;line-height:1.55;color:#e6e6e6}
+  .rail .card{background:var(--bg2);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+  .rail .thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#242424,#141414)}
+  .rail .t{font-size:11.5px;padding:8px 9px;font-weight:600;line-height:1.4}
+  .hint{font-size:12px;color:var(--mut);line-height:1.6;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;margin-bottom:16px;background:var(--bg2)}
+  .hint b{color:var(--fg)}
+  kbd{font:650 11px/1.6 ui-monospace,Menlo,Consolas,monospace;background:var(--bg3);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px}
+</style>
+</head>
+<body>
+  <div class="demo-bar">
+    <b>CANLI DEMO</b>
+    <span>Uzantının gerçek kodu çalışıyor. Aşağıdaki yorum kutusuna tıkla → sağ alttaki <b>GIF</b> düğmesi veya <b>Ctrl+Shift+G</b> ile paneli aç. GIF’ler demo için gömülüdür (ağ erişimi gerekmez).</span>
+  </div>
+
+  <div class="topbar">
+    <div class="yt-logo"><span class="yt-play"></span> YouTube</div>
+    <div class="searchbar">Ara…</div>
+    <div class="avatar-top"></div>
+  </div>
+
+  <div class="page">
+    <main>
+      <div class="player"><div class="bigplay"></div></div>
+      <h1 class="vtitle">GIF for YouTube — nasıl çalışır? (demo)</h1>
+      <div class="vmeta">128.421 görüntüleme · 2 gün önce</div>
+      <div class="chan">
+        <div class="av"></div>
+        <div><div class="nm">GIF Studio</div><div class="subs">42,1 B abone</div></div>
+        <button class="subbtn">Abone Ol</button>
+      </div>
+
+      <section class="comments">
+        <h2>284 Yorum</h2>
+        <ytd-commentbox class="comment-box">
+          <div class="av"></div>
+          <div class="box-wrap">
+            <div id="contenteditable-root" contenteditable="true" role="textbox"
+                 aria-label="Yorum ekle" data-placeholder="Yorum ekle…"></div>
+            <div class="box-actions">
+              <button class="ghost-btn" id="cancel-button">İptal</button>
+              <button class="ghost-btn primary" id="submit-button" aria-label="Yorum yap">Yorum yap</button>
+            </div>
+          </div>
+        </ytd-commentbox>
+
+        <div id="published-slot"></div>
+
+        <div class="c-item">
+          <div class="av" style="background:linear-gradient(135deg,#22c55e,#eab308)"></div>
+          <div>
+            <div class="who">Ahmet <span>3 saat önce</span></div>
+            <div class="txt">Bu uzantı tam aradığım şeydi, GIF ekleyince yorumlar bambaşka oluyor 😄</div>
+          </div>
+        </div>
+        <div class="c-item">
+          <div class="av" style="background:linear-gradient(135deg,#a855f7,#ec4899)"></div>
+          <div>
+            <div class="who">Zeynep <span>5 saat önce</span></div>
+            <div class="txt">Stüdyodan boyut, köşe, yazı ve filtre ayarlamak dahice. Neon preset favorim.</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="hint">
+        <b>Denemek için:</b> yukarıdaki yorum kutusuna tıkla → paneli aç → <b>Keşfet</b> sekmesinden bir GIF seç →
+        alttaki stüdyodan stili değiştir → <b>Yoruma ekle</b>. GIF’i karta basılı tutup yorum alanına da sürükleyebilirsin.<br>
+        <kbd>Ctrl+Shift+G</kbd> panel · <kbd>Esc</kbd> kapat · <kbd>/</kbd> arama
+      </div>
+    </main>
+
+    <aside class="rail">
+      <div class="card"><div class="thumb"></div><div class="t">GIF nasıl eklenir? · GIF Studio</div></div>
+      <div class="card"><div class="thumb"></div><div class="t">En iyi tepki GIF’leri · GIF Studio</div></div>
+      <div class="card"><div class="thumb"></div><div class="t">Yorum stüdyosu ipuçları · GIF Studio</div></div>
+    </aside>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- chrome.* köprüsü: uzantı API'lerini bu demoda taklit eder     -->
+  <!-- ============================================================ -->
+  <script>
+    (function () {
+      const mem = Object.create(null);
+      let listeners = [];
+      const demoGifs = () => (window.GFY_DEMO_GIFS || []);
+
+      function getImpl(keys) {
+        let out = {};
+        if (keys == null) return Object.assign({}, mem);
+        if (typeof keys === 'string') { if (keys in mem) out[keys] = mem[keys]; return out; }
+        if (Array.isArray(keys)) { keys.forEach((k) => { if (k in mem) out[k] = mem[k]; }); return out; }
+        Object.keys(keys).forEach((k) => { out[k] = k in mem ? mem[k] : keys[k]; });
+        return out;
+      }
+
+      function handle(msg) {
+        if (!msg || !msg.type) return { ok: false };
+        if (msg.type === 'gfy:search') {
+          const q = String(msg.query || '').toLowerCase();
+          const items = demoGifs().filter((g) => (g.title + ' ' + g.cat).toLowerCase().includes(q));
+          return { ok: true, data: { items: items.length ? items : demoGifs(), provider: 'pack' } };
+        }
+        if (msg.type === 'gfy:resolve') {
+          const first = demoGifs()[0];
+          return { ok: true, data: Object.assign({}, first, { title: 'Demo GIF (link çözümleme örneği)' }) };
+        }
+        if (msg.type === 'gfy:to-dataurl') return { ok: true, data: msg.url };
+        if (msg.type === 'gfy:stats') return { ok: true, data: { inserted: 1 } };
+        return { ok: true };
+      }
+
+      window.chrome = {
+        runtime: {
+          id: 'demo',
+          lastError: undefined,
+          getURL: (p) => p,
+          sendMessage: (msg, cb) => {
+            const res = handle(msg);
+            if (typeof cb === 'function') { setTimeout(() => cb(res), 0); return; }
+            return Promise.resolve(res);
+          },
+          onMessage: { addListener: (fn) => listeners.push(fn) }
+        },
+        storage: {
+          onChanged: { addListener: function () {} },
+          local: {
+            get: (keys) => Promise.resolve(getImpl(keys)),
+            set: (obj) => { Object.assign(mem, obj); return Promise.resolve(); },
+            clear: () => { Object.keys(mem).forEach((k) => delete mem[k]); return Promise.resolve(); }
+          }
+        }
+      };
+    })();
+  </script>
+
+  <script src="../lib/core.js"></script>
+  <script src="../lib/i18n.js"></script>
+  <script src="../lib/pack.js"></script>
+  <script src="demo-gifs.js"></script>
+  <script>
+    // Demo paketi: gerçek Giphy paketi yerine gömülü GIF'ler
+    if (window.GFY_DEMO_GIFS) {
+      window.GFYPack = { items: window.GFY_DEMO_GIFS, size: window.GFY_DEMO_GIFS.length };
+    }
+  </script>
+  <script src="../content/panel-css.js"></script>
+  <script src="../content/insert.js"></script>
+  <script src="../content/ui.js"></script>
+  <script src="../content/main.js"></script>
+  <script src="../content/render-codes.js"></script>
+
+  <script src="demo-publish.js"></script>
+
+  <script>
+    // Demoda paneli otomatik aç ve yorum alanına odaklan
+    window.setTimeout(() => {
+      const host = document.getElementById('gfy-host');
+      if (!host) return;
+      try {
+        const fab = host.shadowRoot.querySelector('.gfy-fab');
+        if (fab) fab.click();
+      } catch (e) {}
+    }, 600);
+  </script>
+</body>
+</html>
