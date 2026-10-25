@@ -201,13 +201,16 @@ async function search(query, limit, providerOverride) {
 
   if (!q) return { items: [], provider: 'none' };
 
-  if (provider === 'pack') return { items: searchPack(q, lim), provider: 'pack' };
+  if (provider === 'pack') {
+    const items = searchPack(q, lim);
+    return { items, provider: items.length ? 'pack' : 'none', query: q };
+  }
 
   if (provider === 'giphy-api' || (provider === 'auto' && s.giphyApiKey)) {
     if (s.giphyApiKey) {
       try {
         const items = await giphyApiSearch(q, lim, s);
-        if (items.length) return { items, provider: 'giphy-api' };
+        if (items.length) return { items, provider: 'giphy-api', query: q };
       } catch (e) {
         /* düş */
       }
@@ -217,13 +220,14 @@ async function search(query, limit, providerOverride) {
   if (provider === 'auto' || provider === 'giphy-web' || provider === 'giphy-api') {
     try {
       const items = await giphyWebSearch(q, lim, s);
-      if (items.length) return { items, provider: 'giphy-web' };
+      if (items.length) return { items, provider: 'giphy-web', query: q };
     } catch (e) {
       /* düş */
     }
   }
 
-  return { items: searchPack(q, lim), provider: 'pack' };
+  const packItems = searchPack(q, lim);
+  return { items: packItems, provider: packItems.length ? 'pack' : 'none', query: q };
 }
 
 async function giphyApiSearch(q, lim, s) {
@@ -255,70 +259,143 @@ async function giphyApiSearch(q, lim, s) {
     .filter(Boolean);
 }
 
-/** Anahtar gerektirmeyen yedek: Giphy web arama sayfasını ayrıştırır. */
+/** Türkçe karakterleri ASCII'ye çevirip Giphy'nin beklediği slug'ı üretir. */
+const TR_MAP = { ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u', â: 'a', î: 'i', û: 'u' };
+function toSlug(q) {
+  return String(q || '')
+    .toLowerCase()
+    .replace(/[çğıöşüâîû]/g, (c) => TR_MAP[c] || c)
+    .replace(/[’'`"]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-')
+    .slice(0, 120);
+}
+
+const SEARCH_STOPWORDS = new Set([
+  'vs', 'versus', 'meme', 'memes', 'gif', 'gifs', 'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on',
+  'for', 'to', 'with', 'my', 'me', 'you', 'it', 'is', 'are', 'be', 'at', 'by', 'from',
+  've', 'ile', 'bir', 'bu', 'da', 'de', 'mi', 'mu', 'cok', 'en', 'icin', 'gibi'
+]);
+
+function queryTokens(q) {
+  return String(q || '')
+    .toLowerCase()
+    .replace(/[çğıöşüâîû]/g, (c) => TR_MAP[c] || c)
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= 2);
+}
+
+/** Giphy web arama sayfasını ayrıştırır (anahtar gerekmez). */
 async function giphyWebSearch(q, lim, s) {
-  const url = 'https://giphy.com/search/' + encodeURIComponent(q);
-  const html = await fetchText(url);
-  const out = [];
-  const seen = new Set();
+  // Giphy'de boşluk içeren arama yolu (%20) bot sayfası döndürüyor;
+  // bu yüzden slug (tire ile) kullanıyoruz ve sırayla daha basit sorgular deniyoruz.
+  const tokens = queryTokens(q);
+  const meaningful = tokens.filter((t) => !SEARCH_STOPWORDS.has(t));
+  const attempts = [];
+  const push = (parts) => {
+    const slug = toSlug(parts.join(' '));
+    if (slug && attempts.indexOf(slug) === -1) attempts.push(slug);
+  };
+  push(tokens);
+  if (meaningful.length && meaningful.length !== tokens.length) push(meaningful);
+  if (tokens.length > 2) push(tokens.slice(0, 2));
+  if (meaningful.length > 1) meaningful.slice(0, 2).forEach(() => {});
+  if (!attempts.length) return [];
+  attempts.length = Math.min(attempts.length, 3);
 
-  const hrefRe = /href="(?:https:\/\/giphy\.com)?\/gifs\/([^"#?]+)"/g;
-  let m;
-  while ((m = hrefRe.exec(html)) && out.length < lim) {
-    const slug = m[1];
-    const idm = slug.match(/-([A-Za-z0-9]{10,24})$/);
-    if (!idm) continue;
-    const id = idm[1];
-    if (seen.has(id)) continue;
-    seen.add(id);
-    out.push({
-      id,
-      title: slug.replace(/-[A-Za-z0-9]{10,24}$/, '').replace(/-/g, ' ') || q,
-      src: 'giphy',
-      media: 'https://media.giphy.com/media/' + id + '/giphy.gif',
-      preview: 'https://media.giphy.com/media/' + id + '/200w.gif',
-      page: 'https://giphy.com/gifs/' + slug,
-      w: 0,
-      h: 0
-    });
+  for (const slug of attempts) {
+    let html;
+    try {
+      html = await fetchText('https://giphy.com/search/' + slug);
+    } catch (e) {
+      continue;
+    }
+    const out = [];
+    const seen = new Set();
+    const hrefRe = /href="(?:https:\/\/giphy\.com)?\/gifs\/([^"#?]+)"/g;
+    let m;
+    while ((m = hrefRe.exec(html)) && out.length < lim) {
+      const path = decodeURIComponent(m[1]);
+      const idm = path.match(/-([A-Za-z0-9]{10,24})$/);
+      if (!idm) continue;
+      const id = idm[1];
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push({
+        id,
+        slug: path,
+        title: path.replace(/-[A-Za-z0-9]{10,24}$/, '').replace(/-/g, ' ') || q,
+        src: 'giphy',
+        media: 'https://media.giphy.com/media/' + id + '/giphy.gif',
+        preview: 'https://media.giphy.com/media/' + id + '/200w.gif',
+        page: 'https://giphy.com/gifs/' + path,
+        w: 0,
+        h: 0,
+        matchedQuery: slug
+      });
+    }
+    // HTML'de doğrudan medya kimlikleri varsa onları da ekle
+    const mediaRe = /media\d?\.giphy\.com\/media\/([A-Za-z0-9]+)\/(?:200w|giphy)\.(?:gif|webp)/g;
+    while ((m = mediaRe.exec(html)) && out.length < lim) {
+      const id = m[1];
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push({
+        id,
+        title: q,
+        src: 'giphy',
+        media: 'https://media.giphy.com/media/' + id + '/giphy.gif',
+        preview: 'https://media.giphy.com/media/' + id + '/200w.gif',
+        page: 'https://giphy.com/gifs/' + id,
+        w: 0,
+        h: 0,
+        matchedQuery: slug
+      });
+    }
+    if (out.length) {
+      // Giphy sayfasında "ilgili/trend" blokları da olabiliyor: sorguyla örtüşenleri başa al.
+      const toks = queryTokens(q).filter((t) => !SEARCH_STOPWORDS.has(t));
+      const scoreOf = (item) => {
+        const hay = ((item.slug || '') + ' ' + item.title).toLowerCase();
+        return toks.reduce((acc, t) => acc + (hay.indexOf(t) !== -1 ? t.length : 0), 0);
+      };
+      return out
+        .map((item, i) => ({ item, i, score: scoreOf(item) }))
+        .sort((a, b) => b.score - a.score || a.i - b.i)
+        .map((r) => r.item);
+    }
   }
-
-  // HTML'de media URL'leri varsa onları da yakala (daha güvenilir poster)
-  const mediaRe = /media\d?\.giphy\.com\/media\/([A-Za-z0-9]+)\/(?:200w|giphy)\.(?:gif|webp)/g;
-  while ((m = mediaRe.exec(html)) && out.length < lim) {
-    const id = m[1];
-    if (seen.has(id)) continue;
-    seen.add(id);
-    out.push({
-      id,
-      title: q,
-      src: 'giphy',
-      media: 'https://media.giphy.com/media/' + id + '/giphy.gif',
-      preview: 'https://media.giphy.com/media/' + id + '/200w.gif',
-      page: 'https://giphy.com/gifs/' + id,
-      w: 0,
-      h: 0
-    });
-  }
-  return out;
+  return [];
 }
 
 function searchPack(q, lim) {
   const pack = globalThis.GFYPack ? globalThis.GFYPack.items : [];
-  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-  const scored = pack
-    .map((item) => {
-      const hay = (item.title + ' ' + item.cat).toLowerCase();
-      let score = 0;
-      words.forEach((w) => {
-        if (hay.includes(w)) score += 2;
-      });
-      return { item, score };
-    })
-    .filter((r) => r.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map((r) => r.item);
-  return (scored.length ? scored : pack).slice(0, lim);
+  const all = queryTokens(q);
+  const toks = all.filter((t) => !SEARCH_STOPWORDS.has(t) && t.length >= 3);
+  // Anlamlı kelime yoksa rastgele meme gösterme.
+  if (!toks.length) return [];
+
+  const scored = [];
+  for (const item of pack) {
+    const hay = (item.title + ' ' + item.cat).toLowerCase();
+    let score = 0;
+    let hits = 0;
+    toks.forEach((w) => {
+      if (hay.indexOf(w) !== -1) {
+        hits += 1;
+        score += w.length >= 5 ? 3 : 2;
+      }
+    });
+    if (!hits) continue;
+    // Tek kelimelik sorguda 1 eşleşme yeter; çok kelimede yarısından fazlası aranır.
+    const need = toks.length === 1 ? 1 : Math.ceil(toks.length / 2);
+    if (hits < need) continue;
+    scored.push({ item, score, hits });
+  }
+  scored.sort((a, b) => b.score - a.score || b.hits - a.hits);
+  return scored.slice(0, lim).map((r) => r.item);
 }
 
 /* ------------------------------------------------------------------ */

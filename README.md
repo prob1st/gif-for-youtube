@@ -1,4 +1,4 @@
-# GIF for YouTube — GIF Studio  ·  v1.1.1
+# GIF for YouTube — GIF Studio  ·  v1.1.2
 
 YouTube yorumlarına **GIF ekleyen** Chrome uzantısı (Manifest V3, Türkçe/İngilizce).
 335 GIF'lik doğrulanmış hazır tepki paketi, Giphy arama, link çözümleme, yerel GIF desteği,
@@ -195,14 +195,50 @@ Test betikleri: `../tools/test_demo.py`, `../tools/e2e_extension.py`, `../tools/
 |---|---|
 | "Yorum alanı bulunamadı" | Önce yorum kutusuna tıkla; YouTube editörü yeniden oluşturduysa paneli kapat/aç |
 | GIF yüklenmiyor | Kurumsal ağ/DNS Giphy'yi engelliyor olabilir; **Yerel** sekmesinden dosya sürükle |
-| Arama boş | `Ayarlar → Giphy API anahtarı` (ücretsiz, developers.giphy.com) ekle |
+| Arama alakasız sonuç veriyor | v1.1.2'de düzeltildi (aşağıya bak) |
+| Arama boş | `Ayarlar → Giphy API anahtarı` (ücretsiz, developers.giphy.com) ekle, ya da daha kısa kelime dene |
+| Aramada boşluk videoyu durduruyor | v1.1.2'de düzeltildi |
 | Panel görünmüyor | Sayfayı yenile; `Ctrl+Shift+G`; sağ alttaki GIF düğmesi kapalıysa ayarlardan aç |
 | GIF gönderdikten sonra kayboldu | v1.1.0'da çözüldü: "GIF kodu + link" modu kullan (bkz. §4) |
 | Yorumda `:gfy:...:` metni göründü | Karşı taraf uzantıyı kullanmıyor. Link yine tıklanabilir; GIF'i görmek için uzantı gerekir |
 
 ---
 
-## 9. Gizlilik
+## 9. Arama nasıl çalışır? (v1.1.2 düzeltmeleri)
+
+**Sorun:** Çok kelimeli aramalarda ("trash vs garbage") alakasız memeler geliyordu.
+
+**Kök neden:** Giphy'nin arama sayfası, yolunda **boşluk** (`%20`) olan isteklerde 47 KB'lik bir
+"robot" sayfası döndürüyor — içinde **0 sonuç** var. Uzantı da boş sonucu "hazır pakete" düşürüp,
+`vs` / `meme` gibi kelimelerin pakette rastgele eşleşmesini gösteriyordu.
+
+**Çözüm:**
+1. Arama adresi artık **slug** ile kuruluyor: `/search/trash-vs-garbage` (tire, ASCII'ye çevrilmiş Türkçe
+   karakterler). Sırayla 3 varyant deneniyor (tam sorgu → anlamsız kelimeler atılmış → ilk 2 kelime).
+2. Sonuçlar sorguyla örtüşmeye göre **sıralanıyor** (sayfadaki "ilgili/trend" blokları sona iniyor).
+3. Hazır paket araması artık **rastgele sonuç döndürmüyor**: anlamlı kelime yoksa veya eşleşme yoksa
+   boş liste dönüyor; arayüz "sonuç bulunamadı + Giphy'de aç + API anahtarı ekle" ekranını gösteriyor.
+4. Durum satırı gerçek sağlayıcıyı yazıyor: `Giphy`, `Giphy API`, `hazır paket`.
+
+**Ölçüm (gerçek uzantı + gerçek Giphy):**
+
+| Sorgu | Önce | Sonra |
+|---|---|---|
+| `trash vs garbage` | 0 gerçek sonuç → rastgele memeler | **25 alakalı sonuç** ("meme trash garbage", "trash treasure meme"…) |
+| `trash vs garbage meme` | rastgele | **15 alakalı sonuç** |
+| `garbage meme`, `crying cat`, `facepalm`, `kedi` | karışık | 22–24 alakalı sonuç |
+| `zzzzqqqxyz` | rastgele memeler | **0 sonuç + yardımcı boş ekran** |
+
+### Klavye: boşluk tuşu videoyu durduruyordu
+YouTube kısayolları `document` seviyesinde dinliyor ve shadow DOM'da olayın hedefi `#gfy-host`
+olarak görünüyor — bu yüzden arama alanında boşluk yazınca video duruyordu. Panel artık
+`keydown`/`keyup`/`keypress` olaylarını **kendi sınırında durduruyor**: panel içindeki kendi
+işleyicilerimiz çalışmaya devam ediyor, olay YouTube'a ulaşmıyor. Boşluk, `f`, `k`, `j`, `l`
+ve tüm diğer kısayollar artık panelde güvenli (test: `tools/test_space_key.py`).
+
+---
+
+## 10. Gizlilik
 
 - Hiçbir analitik, izleme veya uzak sunucu yok. Arama istekleri doğrudan Giphy'ye gider.
 - Ayarlar, favoriler, geçmiş yalnızca `chrome.storage.local` içinde tutulur.
@@ -210,7 +246,7 @@ Test betikleri: `../tools/test_demo.py`, `../tools/e2e_extension.py`, `../tools/
 - Giphy API anahtarı (girersen) yalnızca cihazında saklanır.
 - Ayrıntılar: `PRIVACY.md`.
 
-## 10. Lisans ve içerik
+## 11. Lisans ve içerik
 
 Kod: MIT. GIF içeriği Giphy üzerinden sunulur ve [Giphy kullanım koşullarına](https://giphy.com/terms) tabidir.
 Yerleşik paket yalnızca herkese açık Giphy GIF'lerinin kimliklerini içerir; medya Giphy CDN'inden yüklenir.

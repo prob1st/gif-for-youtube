@@ -250,6 +250,15 @@
       this.makeDraggable(panel, head);
       this.positionPanel();
 
+      // YouTube'un global kısayolları (boşluk = oynat/durdur, f = tam ekran, k, j, l…)
+      // document seviyesinde dinleniyor. Panelden gelen tuş olaylarını burada
+      // durduruyoruz: panel içindeki kendi işleyicilerimiz (daha derinde) çalışmaya
+      // devam eder, olay YouTube'a ulaşmaz. Böylece aramada boşluk videoyu durdurmaz.
+      ['keydown', 'keyup', 'keypress'].forEach((type) => {
+        panel.addEventListener(type, (e) => e.stopPropagation(), false);
+      });
+      fab.addEventListener('keydown', (e) => e.stopPropagation());
+
       panel.addEventListener('keydown', (e) => this.onKeyDown(e));
     }
 
@@ -571,6 +580,55 @@
       return card;
     }
 
+    /** Arama sonucu yoksa: açıklama + Giphy'de aç + API anahtarı ipucu. */
+    emptySearch(query) {
+      const map = { ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' };
+      const slug = String(query || '')
+        .toLowerCase()
+        .replace(/[çğıöşü]/g, (c) => map[c] || c)
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      const box = el('div', { className: 'gfy-empty', style: { width: '100%' } });
+      box.appendChild(icon('search'));
+      box.appendChild(
+        el('div', {
+          text:
+            this.lang === 'tr'
+              ? '“' + query + '” için sonuç bulunamadı.'
+              : 'No results for “' + query + '”.'
+        })
+      );
+      box.appendChild(
+        el('div', {
+          className: 'gfy-hint',
+          style: { margin: '8px 0 10px' },
+          text:
+            this.lang === 'tr'
+              ? 'Daha kısa bir kelime dene (ör. “garbage”). Ücretsiz Giphy API anahtarıyla arama çok daha geniş olur.'
+              : 'Try a shorter keyword (e.g. “garbage”). A free Giphy API key gives much wider search.'
+        })
+      );
+      const row = el('div', { className: 'gfy-field', style: { justifyContent: 'center', margin: 0 } });
+      if (slug) {
+        row.appendChild(
+          el(
+            'button',
+            { className: 'gfy-btn sm', attrs: { type: 'button' }, onclick: () => window.open('https://giphy.com/search/' + slug, '_blank', 'noopener') },
+            [icon('external', 12), document.createTextNode(' Giphy\u2019de aç')]
+          )
+        );
+      }
+      row.appendChild(
+        el(
+          'button',
+          { className: 'gfy-btn sm ghost', attrs: { type: 'button' }, onclick: () => this.setTab('settings') },
+          [document.createTextNode(this.lang === 'tr' ? 'API anahtarı ekle' : 'Add API key')]
+        )
+      );
+      box.appendChild(row);
+      return box;
+    }
+
     /* ---------------- seçim ---------------- */
     selectGif(item, opts) {
       this.selection = item;
@@ -610,13 +668,22 @@
         try {
           const res = await g.cGFY.send({ type: 'gfy:search', query, limit: 27 });
           if (my !== this.searchSeq) return;
-          const items = (res && res.ok && res.data && res.data.items) || [];
-          const provider = (res && res.data && res.data.provider) || '';
+          const data = (res && res.ok && res.data) || {};
+          const items = data.items || [];
+          const provider = data.provider || 'none';
           this.renderGrid(grid, items);
-          status.textContent =
-            items.length + ' ' + this.t('resultsFor') + ' “' + query + '” · ' + (provider === 'pack' ? this.t('providerPack') : this.t('poweredBy'));
-          if (provider === 'giphy-web') status.textContent += ' · ' + this.t('noApiKey');
-          if (provider === 'pack') status.textContent = this.t('searchEmpty');
+          const labels = {
+            'giphy-api': 'Giphy API',
+            'giphy-web': 'Giphy',
+            pack: this.lang === 'tr' ? 'hazır paket' : 'built-in pack'
+          };
+          if (items.length) {
+            status.textContent =
+              items.length + ' ' + this.t('resultsFor') + ' · ' + (labels[provider] || provider);
+          } else {
+            status.textContent = '';
+            grid.appendChild(this.emptySearch(query));
+          }
         } catch (err) {
           if (my !== this.searchSeq) return;
           grid.textContent = '';
